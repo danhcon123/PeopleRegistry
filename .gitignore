@@ -1,0 +1,6 @@
+# Ignore build output folders
+[Bb]in/
+[Oo]bj/
+
+# Ignore client-side libraries managed by LibMan
+/task_2_webapp/src/Frontend/wwwroot/lib/
