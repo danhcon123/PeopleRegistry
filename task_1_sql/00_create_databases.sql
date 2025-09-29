@@ -1,0 +1,12 @@
+IF DB_ID('PeopleDb_Task1') IS NULL
+BEGIN
+    CREATE DATABASE PeopleDb_Task1;
+END;
+GO
+
+IF DB_ID('PeopleDb_Task2') IS NULL
+BEGIN
+    CREATE DATABASE PeopleDb_Task2;
+END;
+GO
+
