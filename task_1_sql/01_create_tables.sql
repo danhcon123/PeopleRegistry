@@ -1,8 +1,23 @@
+-- Erstell Databases
+IF DB_ID('PeopleDb_Task1') IS NULL
+BEGIN
+    CREATE DATABASE PeopleDb_Task1;
+END;
+GO
+
+IF DB_ID('PeopleDb_Task2') IS NULL
+BEGIN
+    CREATE DATABASE PeopleDb_Task2;
+END;
+GO
+
+-- Erstell Tabellen für Task 1
 USE PeopleDb_Task1;
 GO
 
 -- Person
 IF OBJECT_ID('dbo.Person', 'U') IS NULL
+BEGIN
     CREATE TABLE dbo.Person (
         Id            UNIQUEIDENTIFIER NOT NULL 
                     CONSTRAINT PK_Person PRIMARY KEY 
@@ -11,11 +26,12 @@ IF OBJECT_ID('dbo.Person', 'U') IS NULL
         Vorname       NVARCHAR(100)    NOT NULL,
         Geburtsdatum  DATE             NULL
     );
-END;
+END
 GO
 
 -- Anschrift (many-to-one Person)
 IF OBJECT_ID('dbo.Anschrift', 'U') IS NULL
+BEGIN
     CREATE TABLE dbo.Anschrift (
         Id            UNIQUEIDENTIFIER NOT NULL 
                     CONSTRAINT PK_Anschrift PRIMARY KEY 
@@ -29,11 +45,12 @@ IF OBJECT_ID('dbo.Anschrift', 'U') IS NULL
             FOREIGN KEY (PersonId) REFERENCES dbo.Person(Id)
             ON DELETE NO ACTION     
     );
-END;
+END
 GO
 
 -- Telefonverbindung (many-to-one Person)
 IF OBJECT_ID('dbo.Telefonverbindung', 'U') IS NULL
+BEGIN
     CREATE TABLE dbo.Telefonverbindung (
         Id             UNIQUEIDENTIFIER NOT NULL 
                     CONSTRAINT PK_Telefonverbindung PRIMARY KEY 
@@ -44,5 +61,5 @@ IF OBJECT_ID('dbo.Telefonverbindung', 'U') IS NULL
             FOREIGN KEY (PersonId) REFERENCES dbo.Person(Id)
             ON DELETE NO ACTION
     );
-END;
+END
 GO

@@ -26,8 +26,8 @@ docker-compose.yml up -d
 
 2. Create both databases and seed initial data for Task 1
 ```
-docker exec -i mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Admin!" -C -i /scripts/01_create_db.sql
-docker exec -i mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Admin!" -C -d PeopleDb_Task1 -i /scripts/02_seed_datas.sql
+docker exec -i mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "PeopleRegistry!" -C -i /scripts/00_create_databases.sql
+docker exec -i mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "PeopleRegistry!" -C -d PeopleDb_Task1 -i /scripts/01_create_table.sql
 ```
 
 3. run Task 1 commands
