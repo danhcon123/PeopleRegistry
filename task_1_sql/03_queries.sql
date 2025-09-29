@@ -6,7 +6,7 @@ SELECT COUNT (*) AS AnzahlPerson FROM dbo.Person;
 GO
 
 -- 2) Wie viele Person wohnen in Dresden?
-SELECT COUNT (*) AS AnzahlPersonInDresden
+SELECT COUNT (DISTINCT a.PersonId) AS AnzahlPersonInDresden
     FROM dbo.Anschrift a
     WHERE a.Ort = N'Dresden';
 GO
@@ -19,12 +19,5 @@ FROM (
     GROUP BY PersonId
     HAVING COUNT (*) > 1
 ) x;
-GO
-
--- Anzahl der Personen pro Ort
-SELECT a.Ort, COUNT (DISTINCT a.PersonId) AS Personen
-FROM dbo.Anschrift
-GROUP BY a.Ort
-ORDER BY Personen DESC, a.Ort;
 GO
 

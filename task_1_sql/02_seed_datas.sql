@@ -24,7 +24,7 @@ VALUES
     (@p1, N'01067', N'Dresden', N'Altmarkt', N'1'),
     (@p2, N'10115', N'Berlin', N'Charlotte', N'29'),
     (@p1, N'01067', N'Dresden', N'Neustädte Markt', N'13'),
-    (@p1, N'80331', N'München', N'Schiller', N'15');
+    (@p3, N'80331', N'München', N'Schiller', N'15');
 
 INSERT INTO dbo.Telefonverbindung (PersonId, Telefonnummer)
 VALUES
