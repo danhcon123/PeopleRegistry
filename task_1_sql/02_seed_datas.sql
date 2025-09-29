@@ -1,11 +1,13 @@
 USE PeopleDb_Task1;
 GO
 
--- Lösch alle Datensätze in allen Tabellen
-TRUNCATE TABLE dbo.Telefonverbindung;
-TRUNCATE TABLE dbo.Anschrift;
-TRUNCATE TABLE dbo.Person;
-GO
+BEGIN TRAN;
+
+DELETE FROM dbo.Telefonverbindung; -- child
+DELETE FROM dbo.Anschrift;         -- child
+DELETE FROM dbo.Person;            -- parent
+
+COMMIT;
 
 DECLARE @p1 UNIQUEIDENTIFIER = NEWID();
 DECLARE @p2 UNIQUEIDENTIFIER = NEWID();
