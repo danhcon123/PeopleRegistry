@@ -38,3 +38,8 @@ For example:
 ```
 docker exec -i mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Admin!" -C -d PeopleDb_Task1 -i /scripts/03_queries.sql
 ```
+
+4. Access to the SQL-command inside container
+```
+docker exec -it mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "YourStrong!Passw0rd" -d PeopleDb_Task1 -C
+```
