@@ -1,10 +1,16 @@
-using Frontend.Components;
+using Frontend.Services;
+using Frontend;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddHttpClient<PersonService>(client =>
+{
+    client.BaseAddress = new Uri("https://your-backend-api-url");
+});
 
 var app = builder.Build();
 

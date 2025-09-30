@@ -1,0 +1,77 @@
+@using Microsoft.AspNetCore.Components
+@using System.Threading.Tasks
+
+@using Frontend.Models.Dto
+@using Frontend.Services
+
+@page "/"
+@inject PersonService PersonService
+
+<h3>Personendaten-Verwaltung</h3>
+
+<div>
+    <input type="text" @bind="searchText" placeholder="Suchkriterium eingeben..." />
+    <button  @onclick="SearchPersons">Personen laden</button>
+</div>
+
+<table class = "table">
+    <thread>
+        <tr>
+            <th>ID</th>
+            <th>Vorname</th>
+            <th>Nachname</th>
+            <th>Geburtsdatum</th>
+            <th>Actions</th>
+        </tr>
+    </thread>
+        <tbody>
+        @foreach (var person in persons)
+        {
+            <tr>
+                <td>@person.Id</td>
+                <td>@person.Vorname</td>
+                <td>@person.Nachname</td>
+                <td>@person.Geburtsdatum?.ToString("yyyy-MM-dd")</td>
+                <td>
+                    <button @onclick="() => EditPerson(person)">Edit</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (selectedPerson != null)
+{
+    <Dialog Person="selectedPerson" OnSave="SavePerson" />
+}
+
+@code {
+    private string searchText = "";
+    private List<PersonDto> persons = new List<PersonDto>();
+    private PersonDto selectedPerson;
+    private async Task SearchPersons(){
+        if (!string.IsNullOrWhiteSpace(searchText)){
+            persons = await PersonService.GetPersonsByNameAsync(searchText);
+        }
+        else{
+            persons = await PersonService.GetAllPersonsAsync();
+        }
+    }
+
+    private void EditPerson(PersonDto person)
+    {
+        selectedPerson = person;
+        // Show the Dialog (via binding, already done above)
+        // Logic for oping a modal or navidating to an edit page
+    }
+
+    private async Task SavePerson(PersonDto updatedPerson){
+        // Aktuelisiere Person
+        await PersonService.UpdatePersonAsync(updatedPerson);
+
+        // Optionally, refresh the person list or close the dialog
+        await SearchPersons(); // Method to refresh the list of persons
+    }
+
+
+}
