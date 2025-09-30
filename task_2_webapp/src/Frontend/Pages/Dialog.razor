@@ -1,23 +1,94 @@
-@using Frontend.Models.Dto
-@code {
-    [Parameter] public PersonDto Person { get; set; }
-    [Parameter] public EventCallback<PersonDto> OnSave { get; set; }
 
-    private async Task SaveChanges(){
-        await OnSave.InvokeAsync(Person);
-    }
+@using Frontend.Models.Dto
+@using Microsoft.AspNetCore.Components
+@using System.Globalization
+
+@if (IsVisible)
+{
+    <div class="modal show" tabindex="-1" role="dialog">
+        <div class="modal-content" role="document">
+            <div class="modal-header">
+                <h2>Person bearbeiten</h2>
+                <button type="button" class="close-btn" @onclick="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-section">
+                    <h3>Stammdaten</h3>
+                    <div class="form-group">
+                        <label for="vorname">Vorname:</label>
+                        <input id="vorname" class="form-control" @bind="Person.Vorname" />
+                    </div>
+                    <div class="form-group">
+                        <label for="nachname">Nachname:</label>
+                        <input id="nachname" class="form-control" @bind="Person.Nachname" />
+                    </div>
+                    <div class="form-group">
+                        <label for="geburtsdatum">Geburtsdatum:</label>
+                        <input id="geburtsdatum" type="date" class="form-control" 
+                               @bind="Person.Geburtsdatum" 
+                               @bind:format="yyyy-MM-dd" />
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Adressen</h3>
+                    @foreach (var address in Person.Addresses)
+                    {
+                        <div class="address-card">
+                            <div class="address-header">
+                                <button class="btn-remove" @onclick="() => Person.Addresses.Remove(address)">&times;</button>
+                            </div>
+                            <input class="form-control" @bind="address.Strasse" placeholder="Straße" />
+                            <input class="form-control" @bind="address.Ort" placeholder="Ort" />
+                            <input class="form-control" @bind="address.Postleitzahl" placeholder="PLZ" />
+                        </div>
+                    }
+                    <button class="btn-add" @onclick="AddAddress">Adresse hinzufügen</button>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Telefonnummern</h3>
+                    @foreach (var phone in Person.Phones)
+                    {
+                        <div class="phone-item">
+                            <input class="form-control phone-number" @bind="phone.Telefonnummer" placeholder="Nummer" />
+                            <button class="btn-remove" @onclick="() => Person.Phones.Remove(phone)">&times;</button>
+                        </div>
+                    }
+                    <button class="btn-add" @onclick="AddPhone">Nummer hinzufügen</button>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" @onclick="Close">Abbrechen</button>
+                <button type="button" class="btn btn-success" @onclick="SaveChanges">Änderungen speichern</button>
+            </div>
+        </div>
+    </div>
 }
 
-<div class = "modal" style="@(Person == null ? "display:none" : "")">
-    <h3>Edit Person</h3>
-    <label for="vorname">Vorname:</label>
-    <input id="vorname" @bind="Person.Vorname" />
-    
-    <label for="nachname">Nachname:</label>
-    <input id="nachname" @bind="Person.Nachname" />
-    
-    <label for="geburtsdatum">Geburtsdatum:</label>
-    <input id="geburtsdatum" type="date" @bind="Person.Geburtsdatum" />
-    
-    <button @onclick="SaveChanges">Save</button>
-</div>
+@code {
+    [Parameter] public PersonDto Person { get; set; }
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<PersonDto> OnSave { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private async Task SaveChanges()
+    {
+        await OnSave.InvokeAsync(Person);
+    }
+
+    private async Task Close()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private void AddAddress()
+    {
+        Person.Addresses.Add(new AddressDto());
+    }
+
+    private void AddPhone()
+    {
+        Person.Phones.Add(new PhoneDto());
+    }
+}

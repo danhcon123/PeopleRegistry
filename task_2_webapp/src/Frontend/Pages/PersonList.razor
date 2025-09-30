@@ -6,49 +6,86 @@
 
 @page "/"
 @inject PersonService PersonService
+<div class="container">
+    <div class="header">
+        <h1>Personendaten-Verwaltung</h1>
+        <p>Verwaltung von Personendaten mit Anschriften und Telefonnummern</p>
+    </div>
 
-<h3>Personendaten-Verwaltung</h3>
+    <div class="main-content">
+        <div id="statusMessage" class="status-message"></div>
 
-<div>
-    <input type="text" @bind="searchText" placeholder="Suchkriterium eingeben..." />
-    <button  @onclick="SearchPersons">Personen laden</button>
+        <div class="search-section">
+            <form class="search-form" id="searchForm" @onsubmit="SearchPersons">
+                <div class="form-group">
+                    <label for="searchName">Name (optional):</label>
+                    <input type="text" id="searchName" placeholder="Suchkriterium eingeben..." @bind="searchText" />
+                </div>
+                <button type="submit" class="btn btn-primary">Personen laden</button>
+                <button type="button" id="seedData" class="btn btn-seed">Testdaten generieren</button>
+                <button type="button" id="saveChanges" class="btn btn-success" style="display: none;">Änderungen sichern</button>
+            </form>
+        </div>
+
+        <div class="results-section">
+            <div class="results-header">
+                <h2>Ergebnisse</h2>
+                <span id="resultsCount" class="results-count">@($"{persons.Count} Personen gefunden")</span>
+            </div>
+
+            <div class="table-container">
+                <div id="loadingState" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Lade Personendaten...</p>
+                </div>
+
+                <div id="emptyState" class="empty-state" style="@((persons.Count == 0 ? "display: block;" : "display: none;"))">
+                    <div style="font-size: 4em; margin-bottom: 20px; opacity: 0.5;">👥</div>
+                    <h3>Keine Personen gefunden</h3>
+                    <p>Klicken Sie auf "Personen laden" oder "Testdaten generieren".</p>
+                </div>
+
+                <table id="resultsTable" style="@(persons.Count > 0 ? "" : "display: none;");">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Vorname</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var person in persons)
+                        {
+                            <tr>
+                                <td>@person.Id</td>
+                                <td>@person.Vorname</td>
+                                <td>@person.Nachname</td>
+                                <td>
+                                    <button @onclick="() => EditPerson(person)">Edit</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
-
-<table class = "table">
-    <thread>
-        <tr>
-            <th>ID</th>
-            <th>Vorname</th>
-            <th>Nachname</th>
-            <th>Geburtsdatum</th>
-            <th>Actions</th>
-        </tr>
-    </thread>
-        <tbody>
-        @foreach (var person in persons)
-        {
-            <tr>
-                <td>@person.Id</td>
-                <td>@person.Vorname</td>
-                <td>@person.Nachname</td>
-                <td>@person.Geburtsdatum?.ToString("yyyy-MM-dd")</td>
-                <td>
-                    <button @onclick="() => EditPerson(person)">Edit</button>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
 
 @if (selectedPerson != null)
 {
-    <Dialog Person="selectedPerson" OnSave="SavePerson" />
+    <Dialog Person="selectedPerson" 
+            IsVisible="isDialogVisible"
+            OnSave="SavePerson" 
+            OnClose="CloseDialog" />
 }
 
 @code {
     private string searchText = "";
     private List<PersonDto> persons = new List<PersonDto>();
     private PersonDto selectedPerson;
+    private bool isDialogVisible = false;
+
     private async Task SearchPersons(){
         if (!string.IsNullOrWhiteSpace(searchText)){
             persons = await PersonService.GetPersonsByNameAsync(searchText);
@@ -61,17 +98,18 @@
     private void EditPerson(PersonDto person)
     {
         selectedPerson = person;
-        // Show the Dialog (via binding, already done above)
-        // Logic for oping a modal or navidating to an edit page
+        isDialogVisible = true;
     }
 
     private async Task SavePerson(PersonDto updatedPerson){
-        // Aktuelisiere Person
         await PersonService.UpdatePersonAsync(updatedPerson);
-
-        // Optionally, refresh the person list or close the dialog
-        await SearchPersons(); // Method to refresh the list of persons
+        isDialogVisible = false;
+        await SearchPersons();
     }
 
-
+    private void CloseDialog()
+    {
+        isDialogVisible = false;
+        selectedPerson = null;
+    }
 }
