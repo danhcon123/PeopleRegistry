@@ -73,6 +73,7 @@ body {
 .form-group {
     flex: 1;
     min-width: 200px;
+    
 }
 
 label {
@@ -384,7 +385,7 @@ tbody tr:hover {
     text-decoration: underline;
 }
 
-.address-card {
+.address-card, .phone-card {
     margin-bottom: 15px;
     padding: 15px;
     background: rgba(102, 126, 234, 0.1);

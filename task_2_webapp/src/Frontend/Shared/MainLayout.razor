@@ -1,12 +1,13 @@
 @inherits LayoutComponentBase
 
-<div class="main-layout">
-    <header>
-        <!-- Other header content -->
-    </header>
-
-    <main>
-        @Body  <!-- This is where the content of each page will go -->
-    </main>
-
+<div class = "page-wrapper">
+    @Body  <!-- This is where the content of each page will go -->
 </div>
+
+<style>
+    /* Ensure the wrapper takes full height */
+    .page-wrapper {
+        min-height: 100vh;
+    }
+</style>
+

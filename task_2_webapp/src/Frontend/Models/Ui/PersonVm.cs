@@ -2,7 +2,7 @@ namespace Frontend.Models.Ui;
 
 public sealed class PersonVm
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string IdShort => Id.ToString(); // simple display; keep it int
     public string Vorname { get; set; } = "";
     public string Nachname { get; set; } = "";

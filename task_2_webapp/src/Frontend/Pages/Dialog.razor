@@ -14,19 +14,22 @@
             <div class="modal-body">
                 <div class="detail-section">
                     <h3>Stammdaten</h3>
-                    <div class="form-group">
-                        <label for="vorname">Vorname:</label>
-                        <input id="vorname" class="form-control" @bind="Person.Vorname" />
-                    </div>
-                    <div class="form-group">
-                        <label for="nachname">Nachname:</label>
-                        <input id="nachname" class="form-control" @bind="Person.Nachname" />
-                    </div>
-                    <div class="form-group">
-                        <label for="geburtsdatum">Geburtsdatum:</label>
-                        <input id="geburtsdatum" type="date" class="form-control" 
-                               @bind="Person.Geburtsdatum" 
-                               @bind:format="yyyy-MM-dd" />
+                    <div class="address-card">
+
+                        <div class="form-group">
+                            <label for="vorname">Vorname:</label>
+                            <input id="vorname" class="form-control" @bind="Person.Vorname" />
+                        </div>
+                        <div class="form-group">
+                            <label for="nachname">Nachname:</label>
+                            <input id="nachname" class="form-control" @bind="Person.Nachname" />
+                        </div>
+                        <div class="form-group">
+                            <label for="geburtsdatum">Geburtsdatum:</label>
+                            <input id="geburtsdatum" type="date" class="form-control" 
+                                @bind="Person.Geburtsdatum" 
+                                @bind:format="yyyy-MM-dd" />
+                        </div>
                     </div>
                 </div>
 
@@ -50,9 +53,11 @@
                     <h3>Telefonnummern</h3>
                     @foreach (var phone in Person.Phones)
                     {
-                        <div class="phone-item">
-                            <input class="form-control phone-number" @bind="phone.Telefonnummer" placeholder="Nummer" />
-                            <button class="btn-remove" @onclick="() => Person.Phones.Remove(phone)">&times;</button>
+                        <div class="phone-card">
+                            <div class="phone-item">
+                                <input class="form-control phone-number" @bind="phone.Telefonnummer" placeholder="Nummer" />
+                                <button class="btn-remove" @onclick="() => Person.Phones.Remove(phone)">&times;</button>
+                            </div>
                         </div>
                     }
                     <button class="btn-add" @onclick="AddPhone">Nummer hinzufügen</button>

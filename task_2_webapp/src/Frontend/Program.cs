@@ -7,6 +7,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// Register services as Scoped (one instance per circuit/user)
+builder.Services.AddScoped<PersonService>();
+builder.Services.AddScoped<AddressService>();
+builder.Services.AddScoped<PhoneService>();
+
+// Configure HttpClient to call a backend API
 builder.Services.AddHttpClient<PersonService>(client =>
 {
     client.BaseAddress = new Uri("https://your-backend-api-url");
@@ -18,16 +24,13 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-
-
 app.UseAntiforgery();
-
 app.MapStaticAssets();
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
