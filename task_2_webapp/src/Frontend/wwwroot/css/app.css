@@ -335,11 +335,22 @@ tbody tr:hover {
     color: white;
     padding: 25px;
     border-radius: 15px 15px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
 }
 
 .modal-header h2 {
     margin: 0;
     font-weight: 300;
+    flex: 1;
+}
+
+.modal-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .modal-body {
@@ -446,22 +457,6 @@ tbody tr:hover {
     border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.close-btn {
-    position: absolute;
-    top: 20px;
-    right: 25px;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 24px;
-    cursor: pointer;
-    opacity: 0.8;
-    transition: opacity 0.2s ease;
-}
-
-.close-btn:hover {
-    opacity: 1;
-}
 
 .loading {
     text-align: center;
@@ -500,7 +495,7 @@ tbody tr:hover {
 .status-message.error {
     background: rgba(248, 215, 218, 0.95);
     border: 1px solid rgba(245, 198, 203, 0.9);
-    color: #721c24;
+    color: #d10217;
 }
 
 .status-message.info {
@@ -546,5 +541,46 @@ tbody tr:hover {
     
     .phone-type {
         width: 100%;
+    }
+
+    /* Generic icon-sized button */
+    .icon-btn {
+        width: 40px;        /* make them bigger */
+        height: 40px;
+        border-radius: 10px;
+        font-size: 22px;    /* bigger icon glyphs */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: none;
+        transition: transform 0.1s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+    /* Edit button look */
+    .btn-edit {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+    }
+    .btn-edit:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    }
+
+    /* Close button look */
+    .close-btn {
+        background: rgba(220, 53, 69, 0.9);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.35);
+    }
+    .close-btn:hover {
+        transform: rotate(0deg) scale(1.05);
+    }
+    .close-btn {
+        position: static;  /* override the earlier absolute rule */
+        top: auto;
+        right: auto;
+        opacity: 1;        /* clearer visibility */
+        font-size: 22px;   /* already set via .icon-btn, but okay to repeat */
     }
 }

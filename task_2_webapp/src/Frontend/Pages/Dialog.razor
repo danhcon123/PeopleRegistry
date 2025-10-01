@@ -3,69 +3,163 @@
 @using Microsoft.AspNetCore.Components
 @using System.Globalization
 
-@if (IsVisible)
+@if (IsVisible && Person != null)
 {
-    <div class="modal show" tabindex="-1" role="dialog">
-        <div class="modal-content" role="document">
+    <div class="modal show" tabindex="-1" role="dialog" @onclick="HandleBackdropClick">
+        <div class="modal-content" role="document" @onclick:stopPropagation="true">
             <div class="modal-header">
-                <h2>Person bearbeiten</h2>
-                <button type="button" class="close-btn" @onclick="Close">&times;</button>
+                <h2>@Person.Vorname @Person.Nachname</h2>
+
+                <div class="modal-header-actions">
+                        @if (!isEditMode)
+                    {
+                        <button type="button" class="icon-btn btn-edit" @onclick="EnterEditMode" title="Bearbeiten">
+                            &#9998;
+                        </button>
+                    }
+                    <button type="button" class="icon-btn close-btn" @onclick="Close" title="Schliessen">&times;</button>
+                </div>
             </div>
             <div class="modal-body">
-                <div class="detail-section">
-                    <h3>Stammdaten</h3>
-                    <div class="address-card">
-
-                        <div class="form-group">
-                            <label for="vorname">Vorname:</label>
-                            <input id="vorname" class="form-control" @bind="Person.Vorname" />
-                        </div>
-                        <div class="form-group">
-                            <label for="nachname">Nachname:</label>
-                            <input id="nachname" class="form-control" @bind="Person.Nachname" />
-                        </div>
-                        <div class="form-group">
-                            <label for="geburtsdatum">Geburtsdatum:</label>
-                            <input id="geburtsdatum" type="date" class="form-control" 
-                                @bind="Person.Geburtsdatum" 
-                                @bind:format="yyyy-MM-dd" />
+                @if (isEditMode)
+                {
+                    <!-- EDIT MODE -->
+                    <div class="detail-section">
+                        <h3>Stammdaten</h3>
+                        <div class="address-card">
+                            <div class="form-group">
+                                <label for="vorname">Vorname:</label>
+                                <input id="vorname" class="form-control" @bind="editedPerson.Vorname" />
+                            </div>
+                            <div class="form-group">
+                                <label for="nachname">Nachname:</label>
+                                <input id="nachname" class="form-control" @bind="editedPerson.Nachname" />
+                            </div>
+                            <div class="form-group">
+                                <label for="geburtsdatum">Geburtsdatum:</label>
+                                <input id="geburtsdatum" 
+                                       type="date" 
+                                       class="form-control"
+                                       value="@(editedPerson.Geburtsdatum?.ToString("yyyy-MM-dd"))"
+                                       @onchange="@((ChangeEventArgs e) => editedPerson.Geburtsdatum = DateTime.Parse(e.Value?.ToString() ?? DateTime.Now.ToString()))" />
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="detail-section">
-                    <h3>Adressen</h3>
-                    @foreach (var address in Person.Addresses)
-                    {
-                        <div class="address-card">
-                            <div class="address-header">
-                                <button class="btn-remove" @onclick="() => Person.Addresses.Remove(address)">&times;</button>
+                    <div class="detail-section">
+                        <h3>Adressen</h3>
+                        @foreach (var address in editedPerson.Addresses.ToList())
+                        {
+                            <div class="address-card">
+                                <div class="address-header">
+                                    <button type="button" class="btn-remove" @onclick="@(() => RemoveAddress(address))">&times;</button>
+                                </div>
+                                <input class="form-control" @bind="address.Strasse" placeholder="Strasse" />
+                                <input class="form-control" @bind="address.Hausnummer" placeholder="Hausnummer" />
+                                <input class="form-control" @bind="address.Postleitzahl" placeholder="PLZ" />
+                                <input class="form-control" @bind="address.Ort" placeholder="Ort" />
                             </div>
-                            <input class="form-control" @bind="address.Strasse" placeholder="Straße" />
-                            <input class="form-control" @bind="address.Ort" placeholder="Ort" />
-                            <input class="form-control" @bind="address.Postleitzahl" placeholder="PLZ" />
-                        </div>
-                    }
-                    <button class="btn-add" @onclick="AddAddress">Adresse hinzufügen</button>
-                </div>
+                        }
+                        <button type="button" class="btn btn-add" @onclick="AddAddress">+ Adresse hinzufuegen</button>
+                    </div>
 
-                <div class="detail-section">
-                    <h3>Telefonnummern</h3>
-                    @foreach (var phone in Person.Phones)
-                    {
-                        <div class="phone-card">
-                            <div class="phone-item">
-                                <input class="form-control phone-number" @bind="phone.Telefonnummer" placeholder="Nummer" />
-                                <button class="btn-remove" @onclick="() => Person.Phones.Remove(phone)">&times;</button>
+                    <div class="detail-section">
+                        <h3>Telefonnummern</h3>
+                        @foreach (var phone in editedPerson.Phones.ToList())
+                        {
+                            <div class="phone-card">
+                                <div class="phone-item">
+                                    <input class="form-control phone-number" @bind="phone.Telefonnummer" placeholder="Nummer" />
+                                    <button type="button" class="btn-remove" @onclick="@(() => RemovePhone(phone))">&times;</button>
+                                </div>
+                            </div>
+                        }
+                        <button type="button" class="btn btn-add" @onclick="AddPhone">+ Nummer hinzufuegen</button>
+                    </div>
+                }
+                else
+                {
+                    <!-- VIEW MODE -->
+                    <div class="detail-section">
+                        <h3>Stammdaten</h3>
+                        <div class="address-card-display">
+                            <div class="detail-item">
+                                <span class="detail-label">Vorname:</span>
+                                <span class="detail-value">@Person.Vorname</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Nachname:</span>
+                                <span class="detail-value">@Person.Nachname</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Geburtsdatum:</span>
+                                <span class="detail-value">@(Person.Geburtsdatum?.ToString("dd.MM.yyyy") ?? "Nicht angegeben")</span>
                             </div>
                         </div>
-                    }
-                    <button class="btn-add" @onclick="AddPhone">Nummer hinzufügen</button>
-                </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h3>Adressen</h3>
+                        @if (Person.Addresses.Any())
+                        {
+                            @foreach (var address in Person.Addresses)
+                            {
+                                <div class="address-card-display">
+                                    <div class="detail-item">
+                                        <span class="detail-label">Strasse:</span>
+                                        <span class="detail-value">@address.Strasse @address.Hausnummer</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">PLZ / Ort:</span>
+                                        <span class="detail-value">@address.Postleitzahl @address.Ort</span>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="no-data">Keine Adressen vorhanden</p>
+                        }
+                    </div>
+
+                    <div class="detail-section">
+                        <h3>Telefonnummern</h3>
+                        @if (Person.Phones.Any())
+                        {
+                            @foreach (var phone in Person.Phones)
+                            {
+                                <div class="detail-item">
+                                    <span class="detail-label">Telefon:</span>
+                                    <span class="detail-value">
+                                        <a href="tel:@phone.Telefonnummer">@phone.Telefonnummer</a>
+                                    </span>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="no-data">Keine Telefonnummern vorhanden</p>
+                        }
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class=".status-message.error">
+                        @errorMessage
+                    </div>
+                }
             </div>
             <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" @onclick="Close">Abbrechen</button>
-                <button type="button" class="btn btn-success" @onclick="SaveChanges">Änderungen speichern</button>
+                @if (isEditMode)
+                {
+                    <button type="button" class="btn btn-secondary" @onclick="CancelEdit">Abbrechen</button>
+                    <button type="button" class="btn btn-success" @onclick="SaveChanges">Aenderungen speichern</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-secondary" @onclick="Close">Schliessen</button>
+                }
             </div>
         </div>
     </div>
@@ -77,23 +171,163 @@
     [Parameter] public EventCallback<PersonDto> OnSave { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
 
+    private bool isEditMode = false;
+    private PersonDto editedPerson = new();
+    private string errorMessage="";
+    protected override void OnParametersSet()
+    {
+        if (Person != null){
+            // Immer starten in View mode
+            isEditMode=false;
+            errorMessage="";
+            CreateEditCopy();
+        }
+    }
+    private void EnterEditMode(){
+        isEditMode=true;
+        errorMessage="";
+        CreateEditCopy();
+    }
+
+    private void CreateEditCopy(){
+        // Erstell deep Kopie fuer Editing
+        editedPerson = new PersonDto{
+            Id = Person.Id,
+            Vorname=Person.Vorname,
+            Nachname=Person.Nachname,
+            Geburtsdatum=Person.Geburtsdatum,
+            Addresses=Person.Addresses.Select(a => new AddressDto{
+                Id = a.Id,
+                PersonId = a.PersonId,
+                Strasse = a.Strasse,
+                Hausnummer = a.Hausnummer,
+                Postleitzahl = a.Postleitzahl,
+                Ort = a.Ort
+            }).ToList(),
+            Phones = Person.Phones.Select(p=>new PhoneDto{
+                Id=p.Id,
+                PersonId = p.PersonId, 
+                Telefonnummer = p.Telefonnummer
+            }).ToList()
+        };
+    }
+
+    private void CancelEdit(){
+        isEditMode = false;
+        errorMessage = "";
+        CreateEditCopy(); // Aktuellisiere Aenderung
+    }
+
     private async Task SaveChanges()
     {
-        await OnSave.InvokeAsync(Person);
+        try
+        {
+            // Validierung
+            if (string.IsNullOrWhiteSpace(editedPerson.Vorname))
+            {
+                errorMessage = "Vorname darf nicht leer sein.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(editedPerson.Nachname))
+            {
+                errorMessage = "Nachname darf nicht leer sein.";
+                return;
+            }
+
+            // Validiere addresses
+            foreach (var address in editedPerson.Addresses)
+            {
+                if(string.IsNullOrWhiteSpace(address.Strasse) ||
+                string.IsNullOrWhiteSpace(address.Postleitzahl) || 
+                string.IsNullOrWhiteSpace(address.Ort))
+                {
+                    errorMessage = "Alle Adressfelder (Strasse, PLZ, Ort) muessen ausgefuellt sein.";
+                    return; 
+                }
+            }
+            
+            // Validiere Telefonnumer
+            foreach (var phone in editedPerson.Phones)
+            {
+                if (string.IsNullOrWhiteSpace(phone.Telefonnummer))
+                {
+                    errorMessage = "Telefonnummer darf nicht leer sein.";
+                    return;
+                }
+            }
+
+            // Aktualisier mit edited Werte
+            Person.Vorname = editedPerson.Vorname;
+            Person.Nachname = editedPerson.Nachname;
+            Person.Geburtsdatum = editedPerson.Geburtsdatum;
+            Person.Addresses = editedPerson.Addresses;
+            Person.Phones = editedPerson.Phones;
+
+            await OnSave.InvokeAsync(Person);
+            isEditMode = false;
+            errorMessage="";
+        }
+        catch(Exception ex)
+        {
+            errorMessage = $"Fehler beim Speichern: {ex.Message}";
+        }
     }
 
     private async Task Close()
     {
+        if(isEditMode){
+            errorMessage="Aenderungen wurden nicht gespeichert.";
+            await Task.Delay(millisecondsDelay: 2000);
+        }
+
+        isEditMode=false;
+        errorMessage="";
         await OnClose.InvokeAsync();
+    }
+
+    private async void HandleBackdropClick()
+    {
+        if (!isEditMode)
+        {
+            await Close();
+        }
     }
 
     private void AddAddress()
     {
-        Person.Addresses.Add(new AddressDto());
+        editedPerson.Addresses.Add(new AddressDto
+        {
+            Id = Guid.NewGuid(),
+            PersonId = editedPerson.Id,
+            Strasse = "",
+            Hausnummer = "", 
+            Postleitzahl="",
+            Ort=""
+        });
+        StateHasChanged();
+    }
+
+    private void RemoveAddress(AddressDto address)
+    {
+        editedPerson.Addresses.Remove(address);
+        StateHasChanged();
     }
 
     private void AddPhone()
     {
-        Person.Phones.Add(new PhoneDto());
+        editedPerson.Phones.Add(new PhoneDto
+        {
+            Id = Guid.NewGuid(),
+            PersonId = editedPerson.Id,
+            Telefonnummer = ""
+        });
+        StateHasChanged();
+    }
+
+    private void RemovePhone(PhoneDto phone)
+    {
+        editedPerson.Phones.Remove(phone);
+        StateHasChanged();
     }
 }
