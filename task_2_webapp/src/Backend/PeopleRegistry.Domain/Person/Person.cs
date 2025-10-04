@@ -20,7 +20,7 @@ public class Person
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Vorname { get; set; } = string.Empty;
     public string Nachname { get; set; } = string.Empty;
-    public DateTime Geburtsdatum { get; set; }
+    public DateTime? Geburtsdatum { get; set; }
     public ICollection<Backend.PeopleRegistry.Domain.Anschrift.Anschrift> Anschriften { get; set; } = new List<Backend.PeopleRegistry.Domain.Anschrift.Anschrift>();
     public ICollection<Backend.PeopleRegistry.Domain.Telefonverbindung.Telefonverbindung> Telefonverbindungen { get; set; } = new List<Backend.PeopleRegistry.Domain.Telefonverbindung.Telefonverbindung>();
 }

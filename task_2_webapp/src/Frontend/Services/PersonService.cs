@@ -20,13 +20,13 @@ public class PersonService
     // Fetch person by name (for search functionality)
     public async Task<List<PersonDto>> GetPersonsByNameAsync(string name)
     {
-        return await _httpClient.GetFromJsonAsync<List<PersonDto>>($"api/person/{name}");
+        return await _httpClient.GetFromJsonAsync<List<PersonDto>>($"api/person/search/{name}");
     }
 
     // Update person information
     public async Task UpdatePersonAsync(PersonDto person)
     {
-        await _httpClient.PutAsJsonAsync($"api/person/{person.Id}", person);
+        await _httpClient.PutAsJsonAsync($"api/person/id/{person.Id}", person);
     }
 
     // Add a new person
