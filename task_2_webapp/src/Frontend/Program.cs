@@ -15,7 +15,7 @@ builder.Services.AddScoped<PhoneService>();
 // Configure HttpClient to call a backend API
 builder.Services.AddHttpClient<PersonService>(client =>
 {
-    client.BaseAddress = new Uri("https://your-backend-api-url");
+    client.BaseAddress = new Uri("http://localhost:5095/");
 });
 
 var app = builder.Build();
