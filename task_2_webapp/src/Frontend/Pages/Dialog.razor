@@ -48,7 +48,7 @@
 
                     <div class="detail-section">
                         <h3>Adressen</h3>
-                        @foreach (var address in editedPerson.Addresses.ToList())
+                        @foreach (var address in editedPerson.Anschriften.ToList())
                         {
                             <div class="address-card">
                                 <div class="address-header">
@@ -65,7 +65,7 @@
 
                     <div class="detail-section">
                         <h3>Telefonnummern</h3>
-                        @foreach (var phone in editedPerson.Phones.ToList())
+                        @foreach (var phone in editedPerson.Telefonverbindungen.ToList())
                         {
                             <div class="phone-card">
                                 <div class="phone-item">
@@ -100,13 +100,13 @@
 
                     <div class="detail-section">
                         <h3>Adressen</h3>
-                        @if (Person.Addresses.Any())
+                        @if (Person.Anschriften.Any())
                         {
-                            @foreach (var address in Person.Addresses)
+                            @foreach (var address in Person.Anschriften)
                             {
                                 <div class="address-card-display">
                                     <div class="detail-item">
-                                        <span class="detail-label">Strasse:</span>
+                                        <span class="detail-label">Strasse / Hausnummer:</span>
                                         <span class="detail-value">@address.Strasse @address.Hausnummer</span>
                                     </div>
                                     <div class="detail-item">
@@ -124,9 +124,9 @@
 
                     <div class="detail-section">
                         <h3>Telefonnummern</h3>
-                        @if (Person.Phones.Any())
+                        @if (Person.Telefonverbindungen.Any())
                         {
-                            @foreach (var phone in Person.Phones)
+                            @foreach (var phone in Person.Telefonverbindungen)
                             {
                                 <div class="detail-item">
                                     <span class="detail-label">Telefon:</span>
@@ -166,7 +166,7 @@
 }
 
 @code {
-    [Parameter] public PersonDto Person { get; set; }
+    [Parameter] public PersonDto Person { get; set; } = default!;
     [Parameter] public bool IsVisible { get; set; }
     [Parameter] public EventCallback<PersonDto> OnSave { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
@@ -196,7 +196,7 @@
             Vorname=Person.Vorname,
             Nachname=Person.Nachname,
             Geburtsdatum=Person.Geburtsdatum,
-            Addresses=Person.Addresses.Select(a => new AddressDto{
+            Anschriften=Person.Anschriften.Select(a => new AddressDto{
                 Id = a.Id,
                 PersonId = a.PersonId,
                 Strasse = a.Strasse,
@@ -204,7 +204,7 @@
                 Postleitzahl = a.Postleitzahl,
                 Ort = a.Ort
             }).ToList(),
-            Phones = Person.Phones.Select(p=>new PhoneDto{
+            Telefonverbindungen = Person.Telefonverbindungen.Select(p=>new PhoneDto{
                 Id=p.Id,
                 PersonId = p.PersonId, 
                 Telefonnummer = p.Telefonnummer
@@ -236,7 +236,7 @@
             }
 
             // Validiere addresses
-            foreach (var address in editedPerson.Addresses)
+            foreach (var address in editedPerson.Anschriften)
             {
                 if(string.IsNullOrWhiteSpace(address.Strasse) ||
                 string.IsNullOrWhiteSpace(address.Postleitzahl) || 
@@ -248,7 +248,7 @@
             }
             
             // Validiere Telefonnumer
-            foreach (var phone in editedPerson.Phones)
+            foreach (var phone in editedPerson.Telefonverbindungen)
             {
                 if (string.IsNullOrWhiteSpace(phone.Telefonnummer))
                 {
@@ -261,8 +261,8 @@
             Person.Vorname = editedPerson.Vorname;
             Person.Nachname = editedPerson.Nachname;
             Person.Geburtsdatum = editedPerson.Geburtsdatum;
-            Person.Addresses = editedPerson.Addresses;
-            Person.Phones = editedPerson.Phones;
+            Person.Anschriften = editedPerson.Anschriften;
+            Person.Telefonverbindungen = editedPerson.Telefonverbindungen;
 
             await OnSave.InvokeAsync(Person);
             isEditMode = false;
@@ -296,9 +296,9 @@
 
     private void AddAddress()
     {
-        editedPerson.Addresses.Add(new AddressDto
+        editedPerson.Anschriften.Add(new AddressDto
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.Empty,
             PersonId = editedPerson.Id,
             Strasse = "",
             Hausnummer = "", 
@@ -310,15 +310,15 @@
 
     private void RemoveAddress(AddressDto address)
     {
-        editedPerson.Addresses.Remove(address);
+        editedPerson.Anschriften.Remove(address);
         StateHasChanged();
     }
 
     private void AddPhone()
     {
-        editedPerson.Phones.Add(new PhoneDto
+        editedPerson.Telefonverbindungen.Add(new PhoneDto
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.Empty,
             PersonId = editedPerson.Id,
             Telefonnummer = ""
         });
@@ -327,7 +327,7 @@
 
     private void RemovePhone(PhoneDto phone)
     {
-        editedPerson.Phones.Remove(phone);
+        editedPerson.Telefonverbindungen.Remove(phone);
         StateHasChanged();
     }
 }

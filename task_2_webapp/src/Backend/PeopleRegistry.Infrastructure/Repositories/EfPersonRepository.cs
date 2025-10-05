@@ -21,6 +21,12 @@ public class EfPersonRepository : IPersonRepository
         await _db.Personen.Include(p => p.Anschriften)
                           .Include(p => p.Telefonverbindungen)
                           .FirstOrDefaultAsync(p => p.Id == id, ct);
+    public async Task<Person?> GetByIdWithChildrenAsync(Guid id, CancellationToken ct = default) =>
+        await _db.Personen
+            .Include(p => p.Anschriften)
+            .Include(p => p.Telefonverbindungen)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(p => p.Id == id, ct);
 
     public async Task AddAsync(Person person, CancellationToken ct = default)
     {
@@ -30,7 +36,7 @@ public class EfPersonRepository : IPersonRepository
 
     public async Task UpdateAsync(Person person, CancellationToken ct = default)
     {
-        _db.Personen.Update(person);
+        // _db.Personen.Update(person);
         await _db.SaveChangesAsync(ct);
     }
 

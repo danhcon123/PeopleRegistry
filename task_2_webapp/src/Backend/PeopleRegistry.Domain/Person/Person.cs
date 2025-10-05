@@ -9,7 +9,7 @@ public class Person
 
     public Person(Guid id, string vorname, string nachname, DateTime geburtsdatum)
     {
-        Guid Id = id;
+        Id = id;
         Vorname = vorname;
         Nachname = nachname;
         Geburtsdatum = geburtsdatum;
@@ -21,6 +21,6 @@ public class Person
     public string Vorname { get; set; } = string.Empty;
     public string Nachname { get; set; } = string.Empty;
     public DateTime? Geburtsdatum { get; set; }
-    public ICollection<Backend.PeopleRegistry.Domain.Anschrift.Anschrift> Anschriften { get; set; } = new List<Backend.PeopleRegistry.Domain.Anschrift.Anschrift>();
-    public ICollection<Backend.PeopleRegistry.Domain.Telefonverbindung.Telefonverbindung> Telefonverbindungen { get; set; } = new List<Backend.PeopleRegistry.Domain.Telefonverbindung.Telefonverbindung>();
+    public List<Backend.PeopleRegistry.Domain.Anschrift.Anschrift> Anschriften { get; set; } = new();
+    public List<Backend.PeopleRegistry.Domain.Telefonverbindung.Telefonverbindung> Telefonverbindungen { get; set; } = new();
 }

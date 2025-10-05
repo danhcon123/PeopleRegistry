@@ -20,7 +20,7 @@
 
     <div class="main-content">
         @if (!string.IsNullOrEmpty(statusMessage)){
-            <div id="statusMessage" class="status-message.error">
+            <div id="statusMessage" class="status-message @statusType">
                 @statusMessage
             </div>
         }
@@ -35,8 +35,9 @@
                            @bind="searchText"
                            @bind:event="oninput" />
                 </div>
-                <button type="submit" class="btn btn-primary" @onclick="SearchPersons">Personen laden</button>
-                <button type="button" id="seedData" class="btn btn-seed" @onclick="GenerateTestData">Testdaten generieren</button>
+                <button type="submit" class="btn btn-seed" 
+                    @onclick="() => { _cts?.Cancel(); _cts = new (); return SearchPersons(_cts.Token); }">
+                    Personen laden</button>
             </div>
         </div>
 
@@ -102,36 +103,52 @@
             OnClose="CloseDialog" />
 }
 
+@if (isLoadingDetails)
+{
+    <div class="loading"><div class="spinner"></div><p>Lade Personendetails...</p></div>
+}
+
 @code {
-    private PersonService person_service;
     private string searchText = string.Empty;
     private List<PersonDto> persons = new();
     private PersonDto? selectedPerson;
     private bool isDialogVisible = false;
     private bool isLoading =false;
+    private bool isLoadingDetails = false;
     private string statusMessage = string.Empty;
     private string statusType = "success"; // e.g., success | error | info
+    private CancellationTokenSource? _cts;
 
     protected override async Task OnInitializedAsync()
     {
-        await SearchPersons();
+        _cts = new CancellationTokenSource();
+        // await SearchPersons(_cts.Token);
     }
-    private async Task SearchPersons()
+
+    public void Dispose(){
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+
+    private async Task SearchPersons(CancellationToken ct)
     {
         try{
             isLoading = true;
             StateHasChanged();
-            await Task.Delay(200);
+            await Task.Delay(200, ct);
 
             if (!string.IsNullOrWhiteSpace(searchText)){
-                persons = await PersonService.GetPersonsByNameAsync(searchText) ?? new List<PersonDto>();
+                // Personenliste laden (mit Suchtext) – ruft die API über PersonService auf
+                persons = await PersonService.GetPersonsByNameAsync(searchText, ct) ?? new List<PersonDto>();
             }
             else{
+                // Personenliste laden (ohne Suchtext) – ruft die API über PersonService auf
                 persons = await PersonService.GetAllPersonsAsync() ?? new List<PersonDto>();
             }
 
             ShowStatus($"{persons.Count} Person(en) gefunden", "success");
         } 
+        catch (OperationCanceledException) {}
         catch (Exception ex) 
         {
             ShowStatus($"Fehler beim Laden: {ex.Message}", "error");
@@ -142,120 +159,82 @@
         }
     }
 
-    private async Task GenerateTestData()
+    private async Task EditPerson(PersonDto person)
     {
-        try
-        {
-            ShowStatus("Generiere Testdaten ...", "info");
-            isLoading = true;
-            StateHasChanged();
+        isLoadingDetails = true;
+        StateHasChanged();
 
-            await Task.Delay(300); // simulate I/O
-
-            persons = GenerateMockPersons(20);
-            ShowStatus($"{persons.Count} Testdatensaetze erfolgreich generiert!", "success");
+        // Holt Detaildaten (inkl. Adressen/Telefonnummern) vom Backend
+        var details = await PersonService.GetPersonDetailsAsync(person.Id, _cts?.Token ?? CancellationToken.None);
+        isLoadingDetails = false;
+        if (details is null){
+            ShowStatus("Details konnten nicht geladen werden.", "error");
+            return;
         }
-        finally
-        {
-            isLoading = false;
-            StateHasChanged();
-        }
-    }
-
-        private static List<PersonDto> GenerateMockPersons(int count)
-    {
-        var germanFirstNames = new[] { "Hans", "Anna", "Klaus", "Maria", "Peter", "Petra", "Michael", "Sabine", "Thomas", "Andrea", "Wolfgang", "Monika", "Stefan", "Karin", "Juergen" };
-        var germanLastNames  = new[] { "Mueller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Schulz", "Hoffmann", "Koch", "Bauer", "Richter", "Klein", "Wolf" };
-        var streets = new[] { "Hauptstraße", "Bahnhofstraße", "Kirchstraße", "Gartenstraße", "Schulstraße" };
-        var cities  = new[] { "Berlin", "Hamburg", "Muenchen", "Koeln", "Frankfurt" };
-        var plzs    = new[] { "10115", "20095", "80331", "50667", "60311" };
-
-        var random = new Random();
-        var mockPersons = new List<PersonDto>();
-
-        for (int i = 0; i < count; i++)
-        {
-            var person = new PersonDto
-            {
-                Id = Guid.NewGuid(),
-                Vorname = germanFirstNames[random.Next(germanFirstNames.Length)],
-                Nachname = germanLastNames[random.Next(germanLastNames.Length)],
-                Geburtsdatum = DateTime.UtcNow.AddYears(-random.Next(20, 70)).Date,
-                Addresses = new List<AddressDto>(),
-                Phones = new List<PhoneDto>()
-            };
-
-            // 1–2 addresses
-            var addrCount = random.Next(1, 3);
-            for (int j = 0; j < addrCount; j++)
-            {
-                person.Addresses.Add(new AddressDto
-                {
-                    Id = Guid.NewGuid(),
-                    PersonId = person.Id,
-                    Strasse = streets[random.Next(streets.Length)],
-                    Hausnummer = random.Next(1, 200).ToString(),
-                    Postleitzahl = plzs[random.Next(plzs.Length)],
-                    Ort = cities[random.Next(cities.Length)]
-                });
-            }
-
-            // 1–3 phones
-            var phoneCount = random.Next(1, 4);
-            for (int j = 0; j < phoneCount; j++)
-            {
-                person.Phones.Add(new PhoneDto
-                {
-                    Id = Guid.NewGuid(),
-                    PersonId = person.Id,
-                    Telefonnummer = $"+49{random.Next(100, 1000)}{random.Next(1_000_000, 10_000_000)}"
-                });
-            }
-
-            mockPersons.Add(person);
-        }
-
-        return mockPersons;
-    }
-
-    private void EditPerson(PersonDto person)
-    {
-        selectedPerson = new PersonDto{
-            Id = person.Id,
-            Vorname = person.Vorname,
-            Nachname = person.Nachname,
-            Geburtsdatum = person.Geburtsdatum,
-            Addresses = person.Addresses.Select(a => new AddressDto{
-                Id = a.Id,
-                PersonId = a.PersonId,
-                Strasse = a.Strasse,
-                Hausnummer = a.Hausnummer,
-                Postleitzahl = a.Postleitzahl,
-                Ort = a.Ort
-            }).ToList(),
-            Phones = person.Phones.Select(p => new PhoneDto{
-                Id = p.Id,
-                PersonId = p.PersonId,
-                Telefonnummer = p.Telefonnummer
-            }).ToList()
-        };
-
+        // Anschriften + Telefonverbindungen are populated        
+        selectedPerson = details;
         isDialogVisible = true;
+        StateHasChanged();
     }
 
     private async Task SavePerson(PersonDto updatedPerson){
         try
         {
+            // Lokale Liste aktualisieren (optimistic UI)
             var idx = persons.FindIndex(p => p.Id == updatedPerson.Id);
             if (idx >= 0){
                 persons[idx] = updatedPerson;
             }
 
-            await PersonService.UpdatePersonAsync(updatedPerson);
+            // PersonDto -> UpdatePersonDetailsRequest mappen
+            var request = new UpdatePersonDetailsRequest{
+                Vorname = updatedPerson.Vorname,
+                Nachname = updatedPerson.Nachname,
+                Geburtsdatum = updatedPerson.Geburtsdatum,
+                Anschriften = updatedPerson.Anschriften?.Select(a => new AddressDto{
+                    Id = a.Id,
+                    PersonId = a.PersonId,
+                    Strasse = a.Strasse,
+                    Hausnummer = a.Hausnummer,
+                    Postleitzahl = a.Postleitzahl,
+                    Ort = a.Ort
+                }).ToList() ?? new(),
+                Telefonverbindungen = updatedPerson.Telefonverbindungen?.Select(p => new PhoneDto{
+                    Id = p.Id,
+                    PersonId = p.PersonId,
+                    Telefonnummer = p.Telefonnummer
+                }).ToList() ?? new()
+            };
+
+            // Änderungen speichern – baut UpdatePersonDetailsRequest und ruft PUT /details/{id}
+            var updatedDetails=
+                await PersonService.UpdatePersonDetailsAsync(updatedPerson.Id, request, _cts?.Token ?? CancellationToken.None);
+
+            if (updatedDetails is not null)
+            {
+                var uiItem = persons.FirstOrDefault(p => p.Id == updatedDetails.Id);
+                if (uiItem is not null)
+                {
+                    uiItem.Vorname = updatedDetails.Vorname;
+                    uiItem.Nachname = updatedDetails.Nachname;
+                    uiItem.Geburtsdatum = updatedDetails.Geburtsdatum;
+                    uiItem.Anschriften = updatedDetails.Anschriften?.Select(a => new AddressDto
+                    {
+                        Id = a.Id, PersonId = a.PersonId, Strasse = a.Strasse,
+                        Hausnummer = a.Hausnummer, Postleitzahl = a.Postleitzahl, Ort = a.Ort
+                    }).ToList() ?? new();
+                    uiItem.Telefonverbindungen = updatedDetails.Telefonverbindungen?.Select(p => new PhoneDto
+                    {
+                        Id = p.Id, PersonId = p.PersonId, Telefonnummer = p.Telefonnummer
+                    }).ToList() ?? new();
+                }
+            }
             isDialogVisible = false;
             selectedPerson = null;
             await InvokeAsync(StateHasChanged);
+            ShowStatus("Änderungen gespeichert.", "success");
         }
+        catch (OperationCanceledException) {}
         catch (Exception ex) 
         {
             ShowStatus($"Fehler beim Speichern: {ex.Message}", "error");
@@ -269,18 +248,29 @@
     }
     private void ShowStatus(string message, string type)
     {
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+
         statusMessage = message;
         statusType = type;
         StateHasChanged();
 
         if (type == "success")
         {
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(3000);
-                statusMessage = string.Empty;
-                await InvokeAsync(StateHasChanged);
-            });
+            _ = DismissStatusAfterDelay(_cts.Token);
         }
+    }
+
+    private async Task DismissStatusAfterDelay(CancellationToken ct)
+    {
+        try
+        {
+            await Task.Delay(3000, ct);
+            if (ct.IsCancellationRequested) return;
+
+            statusMessage = string.Empty;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (TaskCanceledException) { }
     }
 }

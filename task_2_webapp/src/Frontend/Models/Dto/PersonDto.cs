@@ -15,6 +15,6 @@ public sealed class PersonDto
     [Required, DataType(DataType.Date)]
     public DateTime? Geburtsdatum { get; set; }
 
-    public List<AddressDto> Addresses { get; set; } = new List<AddressDto>();
-    public List<PhoneDto> Phones { get; set; } = new List<PhoneDto>();
+    public List<AddressDto> Anschriften { get; set; } = new List<AddressDto>();
+    public List<PhoneDto> Telefonverbindungen { get; set; } = new List<PhoneDto>();
 }

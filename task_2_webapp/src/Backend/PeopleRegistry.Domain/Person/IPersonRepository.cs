@@ -22,6 +22,11 @@ public interface IPersonRepository
     Task<Person?> GetByIdAsync(Guid id, CancellationToken ct = default);
 
     /// <summary>
+    /// Ruft Daten (Anschrifte und Telefonnummer) einer Person anhand sein ID ab.
+    /// </summary>
+    Task<Person?> GetByIdWithChildrenAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>
     /// Fügt eine neue Person zum Repository hinzu.
     /// </summary>
     Task AddAsync(Person person, CancellationToken ct = default);

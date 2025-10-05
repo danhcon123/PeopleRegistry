@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 
 using Backend.PeopleRegistry.Domain.Person;
+using Backend.PeopleRegistry.Domain.Anschrift;
+using Backend.PeopleRegistry.Domain.Telefonverbindung;
 using Backend.PeopleRegistry.Application.Services;
 using Backend.PeopleRegistry.Infrastructure.Repositories;
 using Backend.PeopleRegistry.Infrastructure.Persistence;
@@ -24,6 +26,8 @@ public static class DependencyInjection
 
         // Repository registrieren
         services.AddScoped<IPersonRepository, EfPersonRepository>();
+        services.AddScoped<IAnschriftRepository, EfAnschriftRepository>();
+        services.AddScoped<ITelefonverbindungRepository, EfTelefonverbindungRepository>();
 
         // Service registrieren
         services.AddScoped<IPersonService, PersonService>();

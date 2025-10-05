@@ -1,24 +1,33 @@
 namespace Backend.PeopleRegistry.Domain.Telefonverbindung;
 
 /// <summary>
-/// Definiert die Schnittstelle für den Zugriff auf Telefonnummer im Repository.
+/// Definiert die Schnittstelle für den Datenzugriff auf <see cref="Telefonverbindung"/>-Entitäten.
+/// Ermöglicht das Abrufen, Hinzufügen, Aktualisieren und Löschen von Telefonnummern.
 /// </summary>
 public interface ITelefonverbindungRepository
 {
     /// <summary>
-    /// Ruft alle Personen asynchron ab.
+    /// Ruft alle Telefonnummern ab, die einer bestimmten Person zugeordnet sind. alle Personen asynchron ab.
     /// </summary>
-    Task<List<Telefonverbindung>> GetAllByPersonIdAsync(CancellationToken ct = default);
+    Task<List<Telefonverbindung>> GetByPersonIdAsync(Guid personId, CancellationToken ct = default);
 
     /// <summary>
-    /// Fügt eine neue Person zum Repository hinzu.
+    /// Ruf Telefonnummer ab, die die ID entspricht.
     /// </summary>
-    Task AddAsync(Telefonverbindung telefonverbindung, CancellationToken ct = default);
+    Task<Telefonverbindung?> GetByIdAsync(Guid id, CancellationToken ct = default);
 
     /// <summary>
-    /// Aktualisiert eine bestehende Person im Repository.
+    /// Fügt eine neue Telefonnummer dem Repository hinzu.
     /// </summary>
-    Task UpdateAsync(Telefonverbindung telefonverbindung, CancellationToken ct = default);
+    Task AddAsync(Telefonverbindung phone, CancellationToken ct = default);
 
-    Task DeleteAsync(Telefonverbindung telefonverbindung, CancellationToken ct = default);
+    /// <summary>
+    /// Aktualisiert eine bestehende Telefonnummer im Repository.
+    /// </summary>
+    Task UpdateAsync(Telefonverbindung phone, CancellationToken ct = default);
+
+    /// <summary>
+    /// Löscht eine bestehende Telefonnummer aus dem Repository.
+    /// </summary>
+    Task DeleteAsync(Guid id, CancellationToken ct = default);
 }
