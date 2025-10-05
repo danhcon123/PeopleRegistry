@@ -48,6 +48,5 @@ public class EfTelefonverbindungRepository : ITelefonverbindungRepository
         var entity = await _db.Telefonverbindungs.FirstOrDefaultAsync(t => t.Id == id, ct);
         if (entity is null) return;
         _db.Telefonverbindungs.Remove(entity);
-        await _db.SaveChangesAsync(ct);
     }
 }

@@ -97,16 +97,15 @@ public class PersonService : IPersonService
     public async Task<Person?> GetDetailsAsync(Guid id, CancellationToken ct = default)
     {
         // Repo Methode liefert zurück
-        
+
         return await _personRepo.GetByIdWithChildrenAsync(id, ct);
     }
 
     public async Task UpdateDetailsAsync(Guid id, string vorname, string nachname, DateTime? geburtsdatum,
-                            IEnumerable<AddressModel> addresses,
-                            IEnumerable<PhoneModel> phones,
-                            CancellationToken ct)
+                          IEnumerable<AddressModel> addresses,
+                          IEnumerable<PhoneModel> phones,
+                          CancellationToken ct)
     {
-        // Akzeptiere leere Sequenzen statt null
         addresses ??= Array.Empty<AddressModel>();
         phones ??= Array.Empty<PhoneModel>();
 
@@ -116,119 +115,127 @@ public class PersonService : IPersonService
         {
             _logger.LogInformation("Begin UpdateDetails for Person {PersonId}", id);
 
-            // 1) Aggregat mit Kindern laden (tracking ON: wir mutieren das Aggregat)
-            var person = await _personRepo.GetByIdWithChildrenAsync(id, ct)
+            // 1) Load person with children
+            var person = await _personRepo.GetByIdAsync(id, ct)
                         ?? throw new KeyNotFoundException("Person nicht gefunden");
 
-            var beforeAddrCount = person.Anschriften.Count;
-            var beforePhoneCount = person.Telefonverbindungen.Count;
+            // 2) Detach all child entities from change tracker
+            _personRepo.DetachAllChildren();
 
-            _logger.LogDebug("Loaded person with {AddressCount} addresses and {PhoneCount} phones",
-                beforeAddrCount, beforePhoneCount);
+            // 2) Get existing collections
+            var existingAddresses = person.Anschriften.ToList();
+            var existingPhones = person.Telefonverbindungen.ToList();
 
-            // 2) Basisdaten normalisieren/aktualisieren
+            // 3) Update basic fields
             person.Vorname = (vorname ?? string.Empty).Trim();
             person.Nachname = (nachname ?? string.Empty).Trim();
             person.Geburtsdatum = geburtsdatum;
 
-            _logger.LogDebug("Updating basic fields: Vorname='{Vorname}', Nachname='{Nachname}', Geburtsdatum={Geburtsdatum}",
-                person.Vorname, person.Nachname, person.Geburtsdatum);
+            // 4) Process Addresses
+            var incomingAddressIds = addresses
+                .Where(a => a.Id.HasValue && a.Id.Value != Guid.Empty)
+                .Select(a => a.Id!.Value)
+                .ToHashSet();
 
-            // 3) Anschriften Upsert
-            _logger.LogDebug("Incoming address DTO count: {IncomingCount}", addresses.Count());
+            // Delete addresses not in incoming list
+            foreach (var addr in existingAddresses.Where(a => !incomingAddressIds.Contains(a.Id)))
+            {
+                person.Anschriften.Remove(addr);
+                _personRepo.RemoveAnschrift(addr);
+            }
 
-            var addrById = person.Anschriften.ToDictionary(a => a.Id, a => a);
-            var incomingAddrIds = new HashSet<Guid>();
-
+            // Update or Add addresses
             foreach (var dto in addresses)
             {
-                var hasId = dto.Id.HasValue && dto.Id.Value != Guid.Empty;
-
-                if (hasId && addrById.TryGetValue(dto.Id!.Value, out var existing))
+                if (dto.Id.HasValue && dto.Id.Value != Guid.Empty)
                 {
-                    existing.Postleitzahl = dto.Postleitzahl;
-                    existing.Ort = dto.Ort;
-                    existing.Strasse = dto.Strasse;
-                    existing.Hausnummer = dto.Hausnummer;
-
-                    incomingAddrIds.Add(existing.Id); // Monitor den echten ID
-
-                    _logger.LogTrace("Address update {AddressId}: {PLZ} {Ort} {Strasse} {Hausnummer}",
-                        existing.Id, dto.Postleitzahl, dto.Ort, dto.Strasse, dto.Hausnummer);
+                    // Try to update existing
+                    var existing = person.Anschriften.FirstOrDefault(a => a.Id == dto.Id.Value);
+                    if (existing != null)
+                    {
+                        // Update in place
+                        existing.Postleitzahl = dto.Postleitzahl;
+                        existing.Ort = dto.Ort;
+                        existing.Strasse = dto.Strasse;
+                        existing.Hausnummer = dto.Hausnummer ?? string.Empty;
+                    }
+                    else
+                    {
+                        // ID provided but doesn't exist - add as new with new ID
+                        person.Anschriften.Add(new Anschrift(
+                            id: Guid.NewGuid(), // NEW ID!
+                            personId: person.Id,
+                            postleitzahl: dto.Postleitzahl,
+                            ort: dto.Ort,
+                            strasse: dto.Strasse,
+                            hausnummer: dto.Hausnummer ?? string.Empty
+                        ));
+                    }
                 }
                 else
                 {
-                    if (hasId && !addrById.ContainsKey(dto.Id!.Value))
-                        _logger.LogWarning("Client sent unknown Address Id {Id}; creating new.", dto.Id!.Value);
-                        
-                    // Insert neuer Eintrag
-                    var newAddr = new Anschrift(
+                    // No ID - definitely new
+                    person.Anschriften.Add(new Anschrift(
                         id: Guid.NewGuid(),
                         personId: person.Id,
                         postleitzahl: dto.Postleitzahl,
                         ort: dto.Ort,
                         strasse: dto.Strasse,
-                        hausnummer: dto.Hausnummer
-                    );
-                    person.Anschriften.Add(newAddr);
-
-                    _logger.LogTrace("Address add {AddressId}: {PLZ} {Ort} {Strasse} {Hausnummer}",
-                        newAddr.Id, dto.Postleitzahl, dto.Ort, dto.Strasse, dto.Hausnummer);
-
-                    incomingAddrIds.Add(newAddr.Id);  // Monitor server-generierte Id
+                        hausnummer: dto.Hausnummer ?? string.Empty
+                    ));
                 }
             }
 
-            // Delete: Alles, was nicht im Zielzustand ist, löschen
-            var removedAddrCount = person.Anschriften.RemoveAll(a => !incomingAddrIds.Contains(a.Id));
-            if (removedAddrCount > 0)
-                _logger.LogDebug("Addresses removed: {RemovedCount}", removedAddrCount);
+            // 5) Process Phones
+            var incomingPhoneIds = phones
+                .Where(p => p.Id.HasValue && p.Id.Value != Guid.Empty)
+                .Select(p => p.Id!.Value)
+                .ToHashSet();
 
-            // 4) Telefonverbindungen Upsert
-            _logger.LogDebug("Incoming phone DTO count: {IncomingCount}", phones.Count());
+            // Delete phones not in incoming list
+            foreach (var phone in existingPhones.Where(p => !incomingPhoneIds.Contains(p.Id)))
+            {
+                person.Telefonverbindungen.Remove(phone);
+                _personRepo.RemoveTelefonverbindung(phone);
+            }
 
-            var phoneById = person.Telefonverbindungen.ToDictionary(p => p.Id, p => p);
-            var incomingPhoneIds = new HashSet<Guid>();
-
+            // Update or Add phones
             foreach (var dto in phones)
             {
-                var hasId = dto.Id.HasValue && dto.Id.Value != Guid.Empty;
-
-                if (hasId && phoneById.TryGetValue(dto.Id!.Value, out var existing))
+                if (dto.Id.HasValue && dto.Id.Value != Guid.Empty)
                 {
-                    // Achtung PII: Nummer nicht auf Info-Level loggen. Trace-Only falls nötig.
-                    existing.Telefonnummer = dto.Telefonnummer;
-
-                    incomingPhoneIds.Add(existing.Id);
-                    _logger.LogTrace("Phone update {PhoneId}", existing.Id);
+                    // Try to update existing
+                    var existing = person.Telefonverbindungen.FirstOrDefault(p => p.Id == dto.Id.Value);
+                    if (existing != null)
+                    {
+                        // Update in place
+                        existing.Telefonnummer = dto.Telefonnummer;
+                    }
+                    else
+                    {
+                        // ID provided but doesn't exist - add as new with new ID
+                        person.Telefonverbindungen.Add(new Telefonverbindung(
+                            id: Guid.NewGuid(), // NEW ID!
+                            personId: person.Id,
+                            telefonnummer: dto.Telefonnummer
+                        ));
+                    }
                 }
                 else
                 {
-                    if (hasId && !phoneById.ContainsKey(dto.Id!.Value))
-                        _logger.LogWarning("Client sent unknown Phone Id {Id}; creating new.", dto.Id!.Value);
-
-                    var newPhone = new Telefonverbindung(
+                    // No ID - definitely new
+                    person.Telefonverbindungen.Add(new Telefonverbindung(
                         id: Guid.NewGuid(),
                         personId: person.Id,
                         telefonnummer: dto.Telefonnummer
-                    );
-                    person.Telefonverbindungen.Add(newPhone);
-                    
-                    incomingPhoneIds.Add(newPhone.Id);
-                    _logger.LogTrace("Phone add {PhoneId}", newPhone.Id);
+                    ));
                 }
             }
 
-            var removedPhoneCount = person.Telefonverbindungen.RemoveAll(p => !incomingPhoneIds.Contains(p.Id));
-            if (removedPhoneCount > 0)
-                _logger.LogDebug("Phones removed: {RemovedCount}", removedPhoneCount);
-
-            // 5) Persistieren (eine Transaktion/Save)
+            // 6) Save changes
             await _personRepo.UpdateAsync(person, ct);
 
-            _logger.LogInformation(
-                "UpdateDetails completed: addresses {BeforeAddrCount}→{AfterAddrCount}, phones {BeforePhoneCount}→{AfterPhoneCount}",
-                beforeAddrCount, person.Anschriften.Count, beforePhoneCount, person.Telefonverbindungen.Count);
+            _logger.LogInformation("UpdateDetails completed successfully");
         }
         catch (KeyNotFoundException ex)
         {

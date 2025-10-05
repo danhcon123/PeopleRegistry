@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Backend.PeopleRegistry.Infrastructure.Persistence;
 using Backend.PeopleRegistry.Domain.Person;
+using Backend.PeopleRegistry.Domain.Anschrift;
+using Backend.PeopleRegistry.Domain.Telefonverbindung;
+
 
 namespace Backend.PeopleRegistry.Infrastructure.Repositories;
 
@@ -36,7 +39,19 @@ public class EfPersonRepository : IPersonRepository
 
     public async Task UpdateAsync(Person person, CancellationToken ct = default)
     {
-        // _db.Personen.Update(person);
+        // Clear any stale tracked entities
+        var trackedEntities = _db.ChangeTracker.Entries()
+            .Where(e => e.State == EntityState.Modified || e.State == EntityState.Deleted)
+            .ToList();
+
+        foreach (var entry in trackedEntities)
+        {
+            if (entry.Entity is Anschrift || entry.Entity is Telefonverbindung)
+            {
+                entry.State = EntityState.Detached;
+            }
+        }
+
         await _db.SaveChangesAsync(ct);
     }
 
@@ -48,5 +63,25 @@ public class EfPersonRepository : IPersonRepository
                     p.Nachname == nachname &&
                     p.Geburtsdatum == geburtsdatum,
                     ct);
+    }
+
+    public void RemoveTelefonverbindung(Backend.PeopleRegistry.Domain.Telefonverbindung.Telefonverbindung telefon)
+    {
+        _db.Telefonverbindungs.Remove(telefon);
+    }
+    public void RemoveAnschrift(Backend.PeopleRegistry.Domain.Anschrift.Anschrift anschrift)
+    {
+        _db.Anschriften.Remove(anschrift);
+    }
+    public void DetachAllChildren()
+    {
+        var entries = _db.ChangeTracker.Entries()
+            .Where(e => e.Entity is Anschrift || e.Entity is Telefonverbindung)
+            .ToList();
+
+        foreach (var entry in entries)
+        {
+            entry.State = EntityState.Detached;
+        }
     }
 }

@@ -4,7 +4,7 @@ namespace Frontend.Models.Dto;
 
 public sealed class AddressDto
 {
-    public Guid Id { get; init; }
+    public Guid? Id { get; init; }
     public Guid PersonId { get; init; }
 
     [Required, StringLength(200)]

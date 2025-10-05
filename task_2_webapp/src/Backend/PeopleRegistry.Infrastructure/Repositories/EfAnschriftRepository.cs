@@ -39,7 +39,6 @@ public class EfAnschriftRepository : IAnschriftRepository
         var entity = await _db.Anschriften.FirstOrDefaultAsync(a => a.Id == id, ct);
         if (entity is null) return;
         _db.Anschriften.Remove(entity);
-        await _db.SaveChangesAsync(ct);
     }
     
 }

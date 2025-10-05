@@ -1,6 +1,5 @@
 namespace Backend.PeopleRegistry.Domain.Person;
 
-
 /// <summary>
 /// Definiert die Schnittstelle für den Zugriff auf Personenobjekte im Repository.
 /// </summary>
@@ -40,4 +39,15 @@ public interface IPersonRepository
     /// Prüfe nach Existierung
     /// </summary>
     Task<bool> ExistsAsync(string vorname, string nachname, DateTime? geburtsdatum, CancellationToken ct = default);
+
+    /// <summary>
+    /// Entfernt eine bestimmte Telefonverbindung aus der Datenbank.
+    /// </summary>
+    void RemoveTelefonverbindung(Backend.PeopleRegistry.Domain.Telefonverbindung.Telefonverbindung telefon);
+
+    /// <summary>
+    /// Entfernt einen bestimmten Anschrift aus der Datenbank.
+    /// </summary>
+    void RemoveAnschrift(Backend.PeopleRegistry.Domain.Anschrift.Anschrift anschrift);
+    void DetachAllChildren();
 }

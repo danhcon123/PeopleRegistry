@@ -17,10 +17,10 @@ public class Person
         Telefonverbindungen = new List<Backend.PeopleRegistry.Domain.Telefonverbindung.Telefonverbindung>();
     }
 
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; private set; } = Guid.NewGuid();
     public string Vorname { get; set; } = string.Empty;
     public string Nachname { get; set; } = string.Empty;
     public DateTime? Geburtsdatum { get; set; }
-    public List<Backend.PeopleRegistry.Domain.Anschrift.Anschrift> Anschriften { get; set; } = new();
-    public List<Backend.PeopleRegistry.Domain.Telefonverbindung.Telefonverbindung> Telefonverbindungen { get; set; } = new();
+    public ICollection<Backend.PeopleRegistry.Domain.Anschrift.Anschrift> Anschriften { get; private set; } = new List<Backend.PeopleRegistry.Domain.Anschrift.Anschrift>();
+    public ICollection<Backend.PeopleRegistry.Domain.Telefonverbindung.Telefonverbindung> Telefonverbindungen { get; private set; } = new List<Backend.PeopleRegistry.Domain.Telefonverbindung.Telefonverbindung>();
 }
