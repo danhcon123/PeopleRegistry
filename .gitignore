@@ -4,3 +4,5 @@
 
 # Ignore client-side libraries managed by LibMan
 /task_2_webapp/src/Frontend/wwwroot/lib/
+
+/docker/.env

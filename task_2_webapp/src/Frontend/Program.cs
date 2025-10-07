@@ -13,9 +13,12 @@ builder.Services.AddScoped<AddressService>();
 builder.Services.AddScoped<PhoneService>();
 
 // Configure HttpClient to call a backend API
+var backendBaseUrl = builder.Configuration["Backend:BaseUrl"]
+    ?? throw new InvalidOperationException("Backend:BaseUrl is not configured.");
+
 builder.Services.AddHttpClient<PersonService>(client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5095/");
+    client.BaseAddress = new Uri(backendBaseUrl);
 });
 
 var app = builder.Build();
