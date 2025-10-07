@@ -120,11 +120,11 @@ docker compose ps
 
 Sie sollten drei Container sehen: `mssql`, `backend` und `frontend` - alle mit Status "Up".
 
-## Lokale Entwicklung (Ohne vollständiges Docker-Setup)
+### Lokale Entwicklung (Ohne vollständiges Docker-Setup)
 
 Für die lokale Entwicklung können Sie nur die Datenbank in Docker ausführen und Backend/Frontend lokal starten.
 
-### 1. Datenbank starten
+1. **Datenbank starten**
 
 Es gibt eine separate Docker Compose-Datei nur für die Datenbank:
 
@@ -135,7 +135,7 @@ docker compose -f docker-compose.local.yml up -d
 
 Dies startet nur SQL Server und erstellt die `PeopleDb_Task1`-Datenbank mit Beispieldaten und `PeopleDb_Task2`-Datenbank.
 
-### 2. Backend starten
+2. **Backend starten**
 
 Öffnen Sie ein neues Terminal:
 
@@ -150,7 +150,7 @@ dotnet run
 
 Das Backend läuft nun auf http://localhost:8080
 
-### 3. Frontend starten
+3. **Frontend starten**
 
 Öffnen Sie ein weiteres Terminal:
 
@@ -162,7 +162,7 @@ npm run dev
 
 Das Frontend läuft nun auf http://localhost:5173
 
-### Datenbank stoppen
+#### Datenbank stoppen
 
 ```bash
 cd task_2_webapp
