@@ -26,8 +26,6 @@ public static class DependencyInjection
 
         // Repository registrieren
         services.AddScoped<IPersonRepository, EfPersonRepository>();
-        services.AddScoped<IAnschriftRepository, EfAnschriftRepository>();
-        services.AddScoped<ITelefonverbindungRepository, EfTelefonverbindungRepository>();
 
         // Service registrieren
         services.AddScoped<IPersonService, PersonService>();

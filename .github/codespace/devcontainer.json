@@ -1,0 +1,27 @@
+{
+  "name": "PeopleRegistry Dev",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:9.0",
+  "remoteUser": "vscode",
+
+  "forwardPorts": [5196],
+  "portsAttributes": {
+    "5196": { "label": "ASP.NET App", "onAutoForward": "openBrowser" }
+  },
+  "codespaces": {
+    "portsAttributes": {
+      "5196": { "visibility": "public" }
+    }
+  },
+
+  "onCreateCommand": "bash .devcontainer/setup.sh",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csharp",
+        "ms-azuretools.vscode-docker",
+        "editorconfig.editorconfig"
+      ]
+    }
+  }
+}

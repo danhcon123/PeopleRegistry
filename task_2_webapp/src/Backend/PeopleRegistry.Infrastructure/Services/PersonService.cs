@@ -68,12 +68,14 @@ public class PersonService : IPersonService
         _logger.LogDebug(PersonLogEvents.Create, "Creating person: {Vorname} {Nachname} ({Geburtsdatum})",
             vorname, nachname, geburtsdatum);
 
+        // Checke, ob Vor- oder Nachname leer ist
         if (string.IsNullOrWhiteSpace(vorname) || string.IsNullOrWhiteSpace(nachname))
         {
             _logger.LogWarning(PersonLogEvents.Validation, "Validation failed: Vorname/Nachname required.");
             throw new ArgumentException("Vorname und Nachname sind erforderlich.");
         }
 
+        // Wenn schon existiert - Melden
         if (await _personRepo.ExistsAsync(vorname, nachname, geburtsdatum, ct))
         {
             _logger.LogWarning(PersonLogEvents.Duplicate, "Duplicate detected for {Vorname} {Nachname} ({Geburtsdatum}).",
@@ -81,6 +83,7 @@ public class PersonService : IPersonService
             throw new InvalidOperationException("Person existiert bereits.");
         }
 
+        // Erstelle neuen Person mit neue ID 
         var p = new Person(
             id: Guid.NewGuid(),
             vorname: vorname,
@@ -88,16 +91,17 @@ public class PersonService : IPersonService
             geburtsdatum: geburtsdatum ?? DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Utc) // placeholder
         );
 
+        // Speichern
         await _personRepo.AddAsync(p, ct);
 
         using var scope = _logger.BeginScope(new Dictionary<string, object> { ["PersonId"] = p.Id });
         _logger.LogInformation(PersonLogEvents.Create, "Person created successfully.");
         return p;
     }
+    
     public async Task<Person?> GetDetailsAsync(Guid id, CancellationToken ct = default)
     {
         // Repo Methode liefert zurück
-
         return await _personRepo.GetByIdWithChildrenAsync(id, ct);
     }
 
@@ -115,23 +119,20 @@ public class PersonService : IPersonService
         {
             _logger.LogInformation("Begin UpdateDetails for Person {PersonId}", id);
 
-            // 1) Load person with children
+            // 1) Person + abhängige Entitäten laden
             var person = await _personRepo.GetByIdAsync(id, ct)
-                        ?? throw new KeyNotFoundException("Person nicht gefunden");
+                        ?? throw new KeyNotFoundException("Person not found");
 
-            // 2) Detach all child entities from change tracker
-            _personRepo.DetachAllChildren();
-
-            // 2) Get existing collections
+            // 2) Bestehende Adressen & Telefonnummern zwischenspeichern
             var existingAddresses = person.Anschriften.ToList();
             var existingPhones = person.Telefonverbindungen.ToList();
 
-            // 3) Update basic fields
+            // 3) Stammdaten aktualisieren
             person.Vorname = (vorname ?? string.Empty).Trim();
             person.Nachname = (nachname ?? string.Empty).Trim();
             person.Geburtsdatum = geburtsdatum;
 
-            // 4) Process Addresses
+            // 4) Anschriften verarbeiten
             var incomingAddressIds = addresses
                 .Where(a => a.Id.HasValue && a.Id.Value != Guid.Empty)
                 .Select(a => a.Id!.Value)
@@ -144,16 +145,15 @@ public class PersonService : IPersonService
                 _personRepo.RemoveAnschrift(addr);
             }
 
-            // Update or Add addresses
+            // Bestehende aktualisieren oder neue hinzufügen
             foreach (var dto in addresses)
             {
                 if (dto.Id.HasValue && dto.Id.Value != Guid.Empty)
                 {
-                    // Try to update existing
                     var existing = person.Anschriften.FirstOrDefault(a => a.Id == dto.Id.Value);
                     if (existing != null)
                     {
-                        // Update in place
+                        // Aktualisiere die existierende Anschrift
                         existing.Postleitzahl = dto.Postleitzahl;
                         existing.Ort = dto.Ort;
                         existing.Strasse = dto.Strasse;
@@ -161,78 +161,86 @@ public class PersonService : IPersonService
                     }
                     else
                     {
-                        // ID provided but doesn't exist - add as new with new ID
-                        person.Anschriften.Add(new Anschrift(
-                            id: Guid.NewGuid(), // NEW ID!
-                            personId: person.Id,
-                            postleitzahl: dto.Postleitzahl,
-                            ort: dto.Ort,
-                            strasse: dto.Strasse,
-                            hausnummer: dto.Hausnummer ?? string.Empty
-                        ));
+                        // ID existieren, aber Anschrift is nicht existiert - füge neue hinzu
+                        var neu = new Anschrift(
+                            Guid.NewGuid(),
+                            person.Id,
+                            dto.Hausnummer ?? string.Empty,
+                            dto.Strasse,
+                            dto.Postleitzahl,
+                            dto.Ort);
+
+                        person.Anschriften.Add(neu);
+                        _personRepo.AddAnschrift(neu); 
                     }
                 }
                 else
                 {
-                    // No ID - definitely new
-                    person.Anschriften.Add(new Anschrift(
-                        id: Guid.NewGuid(),
-                        personId: person.Id,
-                        postleitzahl: dto.Postleitzahl,
-                        ort: dto.Ort,
-                        strasse: dto.Strasse,
-                        hausnummer: dto.Hausnummer ?? string.Empty
-                    ));
+                    // ID leer - erstelle neuen Anschrift mit neue ID
+                    var neu = new Anschrift(
+                        Guid.NewGuid(),
+                        person.Id,
+                        dto.Hausnummer ?? string.Empty,
+                        dto.Strasse,
+                        dto.Postleitzahl,
+                        dto.Ort);
+
+                    person.Anschriften.Add(neu);
+                    _personRepo.AddAnschrift(neu); 
+            
                 }
             }
 
-            // 5) Process Phones
+            // 5) Telefonverbindungen verarbeiten
             var incomingPhoneIds = phones
                 .Where(p => p.Id.HasValue && p.Id.Value != Guid.Empty)
                 .Select(p => p.Id!.Value)
                 .ToHashSet();
 
-            // Delete phones not in incoming list
+            // Nicht mehr vorhandene Telefonnummern löschen
             foreach (var phone in existingPhones.Where(p => !incomingPhoneIds.Contains(p.Id)))
             {
                 person.Telefonverbindungen.Remove(phone);
                 _personRepo.RemoveTelefonverbindung(phone);
             }
 
-            // Update or Add phones
+            // Bestehende aktualisieren oder neue hinzufügen
             foreach (var dto in phones)
             {
                 if (dto.Id.HasValue && dto.Id.Value != Guid.Empty)
                 {
-                    // Try to update existing
                     var existing = person.Telefonverbindungen.FirstOrDefault(p => p.Id == dto.Id.Value);
                     if (existing != null)
                     {
-                        // Update in place
+                        // Aktualisiere existierende
                         existing.Telefonnummer = dto.Telefonnummer;
                     }
                     else
                     {
-                        // ID provided but doesn't exist - add as new with new ID
-                        person.Telefonverbindungen.Add(new Telefonverbindung(
-                            id: Guid.NewGuid(), // NEW ID!
-                            personId: person.Id,
-                            telefonnummer: dto.Telefonnummer
-                        ));
+                        // ID existiert, aber kein Telefonnummer vorhanden - Füge eine neu mit neuer ID hinzu
+                        var neu = new Telefonverbindung(
+                            Guid.NewGuid(),
+                            person.Id,
+                            dto.Telefonnummer);
+
+                        person.Telefonverbindungen.Add(neu);
+                        _personRepo.AddTelefonverbindung(neu);
                     }
                 }
                 else
                 {
-                    // No ID - definitely new
-                    person.Telefonverbindungen.Add(new Telefonverbindung(
-                        id: Guid.NewGuid(),
-                        personId: person.Id,
-                        telefonnummer: dto.Telefonnummer
-                    ));
+                    // ID leer - neue erstelle mit neue ID
+                    var neu = new Telefonverbindung(
+                        Guid.NewGuid(),
+                        person.Id,
+                        dto.Telefonnummer);
+
+                    person.Telefonverbindungen.Add(neu);
+                    _personRepo.AddTelefonverbindung(neu);
                 }
             }
 
-            // 6) Save changes
+            // 6) Speichern änderung
             await _personRepo.UpdateAsync(person, ct);
 
             _logger.LogInformation("UpdateDetails completed successfully");

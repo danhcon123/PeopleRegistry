@@ -39,20 +39,22 @@ public class EfPersonRepository : IPersonRepository
 
     public async Task UpdateAsync(Person person, CancellationToken ct = default)
     {
-        // Clear any stale tracked entities
-        var trackedEntities = _db.ChangeTracker.Entries()
-            .Where(e => e.State == EntityState.Modified || e.State == EntityState.Deleted)
-            .ToList();
+        Console.WriteLine("----- EF Change Tracker States BEFORE SaveChangesAsync -----");
 
-        foreach (var entry in trackedEntities)
+        foreach (var entry in _db.ChangeTracker.Entries())
         {
-            if (entry.Entity is Anschrift || entry.Entity is Telefonverbindung)
+            if (entry.Entity is Person || entry.Entity is Anschrift || entry.Entity is Telefonverbindung)
             {
-                entry.State = EntityState.Detached;
+                var entityType = entry.Entity.GetType().Name;
+                var entityId = (entry.Entity as dynamic).Id;
+                var state = entry.State;
+                Console.WriteLine($"Entity: {entityType} | ID: {entityId} | State: {state}");
             }
         }
+        Console.WriteLine("------------------------------------------------------------");
 
         await _db.SaveChangesAsync(ct);
+        Console.WriteLine("✅ EF SaveChangesAsync completed");
     }
 
     public async Task<bool> ExistsAsync(string vorname, string nachname, DateTime? geburtsdatum, CancellationToken ct = default)
@@ -73,15 +75,10 @@ public class EfPersonRepository : IPersonRepository
     {
         _db.Anschriften.Remove(anschrift);
     }
-    public void DetachAllChildren()
-    {
-        var entries = _db.ChangeTracker.Entries()
-            .Where(e => e.Entity is Anschrift || e.Entity is Telefonverbindung)
-            .ToList();
 
-        foreach (var entry in entries)
-        {
-            entry.State = EntityState.Detached;
-        }
-    }
+    public void AddTelefonverbindung(Backend.PeopleRegistry.Domain.Telefonverbindung.Telefonverbindung tel)
+        => _db.Telefonverbindungs.Add(tel);
+
+    public void AddAnschrift(Backend.PeopleRegistry.Domain.Anschrift.Anschrift anschrift)
+        => _db.Anschriften.Add(anschrift);
 }

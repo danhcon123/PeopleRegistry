@@ -3,6 +3,8 @@ using Backend.PeopleRegistry.Application.Services;
 using Backend.PeopleRegistry.Application.Models;
 using Backend.PeopleRegistry.Domain.Person; // your Person entity namespace
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Backend.PeopleRegistry.Api.Controllers;
 
@@ -162,14 +164,20 @@ public sealed class PersonController : ControllerBase
         var phoneModels = (dto.Telefonverbindungen ?? []).Select(p =>
             new PhoneModel(p.Id, p.Telefonnummer));
 
+    var json = JsonSerializer.Serialize(dto, new JsonSerializerOptions {
+        WriteIndented = false,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    });
+
+    _logger.LogInformation("Received UpdateDetails for Person {PersonId}. Payload: {Payload}", id, json);
         await _service.UpdateDetailsAsync(
-            id,
-            dto.Vorname,
-            dto.Nachname,
-            dto.Geburtsdatum,
-            addressModels,
-            phoneModels,
-            ct);
+        id,
+        dto.Vorname,
+        dto.Nachname,
+        dto.Geburtsdatum,
+        addressModels,
+        phoneModels,
+        ct);
 
         var updated = await _service.GetDetailsAsync(id, ct);
         if (updated is null) return NotFound();

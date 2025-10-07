@@ -49,5 +49,15 @@ public interface IPersonRepository
     /// Entfernt einen bestimmten Anschrift aus der Datenbank.
     /// </summary>
     void RemoveAnschrift(Backend.PeopleRegistry.Domain.Anschrift.Anschrift anschrift);
-    void DetachAllChildren();
+
+    /// <summary>
+    /// Fügt eine neue Telefonverbindung zur Datenbank hinzu.
+    /// </summary>
+    void AddTelefonverbindung(Backend.PeopleRegistry.Domain.Telefonverbindung.Telefonverbindung tel);
+
+    /// <summary>
+    /// Fügt eine neue Anschrift zur Datenbank hinzu.
+    /// </summary>
+    void AddAnschrift(Backend.PeopleRegistry.Domain.Anschrift.Anschrift anschrift);
+
 }
