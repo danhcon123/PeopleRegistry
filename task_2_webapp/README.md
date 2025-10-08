@@ -158,3 +158,42 @@ Am unteren Rand des Dialogs befinden sich:
 - Abbrechen-Button
 
 Nach erfolgreichem Speichern erscheint eine Erfolgsmeldung, und der Dialog wird automatisch geschlossen.
+
+---
+
+## 🔭 **Ausblick**
+
+### 🧠 Backend
+
+* **Erweiterung der Repositories**
+  Für **Anschriften** und **Telefonverbindungen** können eigene Repositories implementiert werden, um weitere Anwendungsfälle besser abzudecken (z. B. getrennte APIs, Services oder CRUD-Funktionen).
+
+* **Optimierung der DTOs**
+  Die bestehenden DTO-Dateien können vereinfacht und teilweise zusammengeführt werden, um Redundanz zu vermeiden und die Wartbarkeit zu erhöhen.
+
+* **Unit- und Integrationstests**
+  Tests sollten in Zukunft konsequent eingebunden werden. Aufgrund von Zeitmangel wurde dieser Schritt zunächst ausgelassen, ist jedoch essenziell für langfristige Codequalität und Stabilität.
+
+* **Sicherheitsaspekte / Request-Limiting**
+  Eine Rate-Limitierung oder andere Schutzmechanismen (z. B. Captcha, API-Keys) gegen Spam oder Missbrauch von Endpunkten sollten ergänzt werden.
+
+* **Logging & Monitoring (optional)**
+  Einheitliches Logging und Metriken (z. B. via Serilog + OpenTelemetry) wären hilfreich für Debugging, Performanceanalyse und Betrieb.
+
+---
+
+### 🖥️ Frontend
+
+* **Eingabevalidierung mit Nutzerfeedback**
+  Für jede Eingabe sollte eine klare Validierung und Fehlermeldung definiert werden.
+  Beispiel: Telefonnummern dürfen nur mit `0` oder `+` beginnen und maximal 13 Zeichen lang sein. Bei fehlerhaften Eingaben wird eine Meldung angezeigt.
+
+* **Meldungsfeld im Personendialog**
+  Ein separates Meldungsfeld im Dialog kann Status- und Fehlermeldungen (z. B. beim Speichern) benutzerfreundlich darstellen.
+
+* **Verbesserte Strukturierung**
+  Die aktuelle Folder- und Dateistruktur kann klarer gegliedert werden (z. B. nach Komponenten, Services, Models), um die Wartbarkeit und Skalierbarkeit zu erhöhen.
+
+* **Zustandsmanagement (optional)**
+  Mit zunehmender Komplexität könnte ein einfaches State-Management (z. B. via zentralem Service oder Store) eingeführt werden, um den Code lesbarer und robuster zu machen.
+
