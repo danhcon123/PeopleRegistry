@@ -12,12 +12,23 @@ services:
       - mssql_data:/var/opt/mssql
       - ../task_1_sql:/scripts
     command: >
-      /bin/bash -c "
+      /bin/bash -lc "
+        set -e
         /opt/mssql/bin/sqlservr & 
-        sleep 10 && 
-        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'PeopleRegistry!1' -C -i /scripts/01_create_tables.sql &&
-        /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'PeopleRegistry!1' -C -i /scripts/02_seed_datas.sql &&
-        tail -f /var/opt/mssql/log/errorlog
+        pid=$!;
+        echo '⏳ Waiting for SQL Server to be ready...'
+        until /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${MSSQL_SA_PASSWORD:-PeopleRegistry!1}' -C -Q 'SELECT 1' >/dev/null 2>&1; do
+          sleep 1
+        done
+        echo '📝 Running init scripts (if present)...'
+        if [ -f /scripts/01_create_tables.sql ]; then
+          /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${MSSQL_SA_PASSWORD:-PeopleRegistry!1}' -C -i /scripts/01_create_tables.sql
+        fi
+        if [ -f /scripts/02_seed_datas.sql ]; then
+          /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${MSSQL_SA_PASSWORD:-PeopleRegistry!1}' -C -i /scripts/02_seed_datas.sql
+        fi
+        echo '✅ Init done. Handing over to sqlservr...'
+        wait $pid
       "
 volumes:
   mssql_data:
