@@ -25,7 +25,7 @@ Nach dem erfolgreichen Start stehen folgende Endpunkte zur Verfügung:
 
 Zugang zu Frontend: [http://localhost:5173](http://localhost:5173)
 
-![Homepage](../pics/image.png)
+![Homepage](../pics/image3.PNG)
 
 ---
 
@@ -108,3 +108,53 @@ Nach dem Start ist die API-Dokumentation (Swagger) hier erreichbar:
    ```
 Frontend ist dann erreichbar unter: [http://localhost:5161](http://localhost:5161)
 > ⚠️ Stellen Sie sicher, dass `Backend:BaseUrl` in der Frontend-Konfiguration auf die richtige Backend-Adresse zeigt, z. B. `http://localhost:5095`.
+
+---
+
+## 🧭 Funktionsübersicht
+
+Dieses Programm dient zur Verwaltung und Bearbeitung von Personendaten, einschließlich Adressen und Telefonverbindungen.
+Im Folgenden sind die wichtigsten Funktionen der Anwendung beschrieben:
+
+👤 **1. Personen Laden / Suchen**
+
+Der Button „Personen Laden“ hat zwei Funktionen:
+
+Laden: Ruft die gesamte Personenliste vom Backend ab und zeigt sie an.
+
+Suchen: Wenn im Suchfeld ein Buchstabe oder Wort eingetragen ist, verhält sich der Button wie ein Suchwerkzeug. Es werden dann nur die Personen angezeigt, deren Namen das eingegebene Wort enthalten oder relevant sind.
+
+Über dem Suchfeld und dem Button befindet sich ein Meldungsfeld, das den aktuellen Kommunikationsstatus mit dem Backend anzeigt (z. B. beim Laden oder Suchen).
+
+🪄 **2. Personendialog**
+
+Beim Anklicken einer Person in der Liste öffnet sich ein Personendialog.
+![Homepage](../pics/image4.PNG)
+
+
+
+✏️ **3. Bearbeiten & Schließen**
+
+Oben links im Dialog befinden sich zwei Schaltflächen:
+
+✏️ (Stift-Symbol): Aktiviert den Bearbeitungsmodus
+
+❌ (X-Symbol): Schließt den Dialog
+
+📝 **4. Bearbeitungsmodus**
+
+Im Bearbeitungsmodus können alle Daten geändert werden.
+
+Löschen ist derzeit nur für Telefonverbindungen und Anschriften möglich:
+
+Über das ❌-Symbol in den jeweiligen Boxfeldern
+
+Dieses erscheint, sobald der Bearbeitungsmodus aktiviert wurde
+
+Am unteren Rand des Dialogs befinden sich:
+
+- Speichern-Button
+
+- Abbrechen-Button
+
+Nach erfolgreichem Speichern erscheint eine Erfolgsmeldung, und der Dialog wird automatisch geschlossen.
