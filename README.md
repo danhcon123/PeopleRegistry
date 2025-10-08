@@ -72,7 +72,7 @@ Die Anwendung verwendet **zwei separate Datenbanken**:
 
 - [Docker](https://docs.docker.com/get-docker/) (Version 20.10+)
 - [Docker Compose](https://docs.docker.com/compose/install/) (Version 2.0+)
-- (Optional) .NET SDK 8.0+ für lokale Entwicklung
+- (Optional) .NET SDK 9.0+ für lokale Entwicklung
 
 ### Mit Docker ausführen (Empfohlen)
 
